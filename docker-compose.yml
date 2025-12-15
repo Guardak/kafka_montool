@@ -7,6 +7,9 @@ services:
     container_name: kafka1
     ports:
       - "9092:29092"
+    volumes:
+      - ./kafka-jmx-exporter.yml:/opt/kafka/config/jmx-exporter.yml
+      - ./jmx_prometheus_javaagent-1.5.0.jar:/usr/share/jmx_exporter/jmx_prometheus_javaagent.jar
     environment:
       PATH: =/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/kafka/bin
       KAFKA_NODE_ID: 1
@@ -16,9 +19,7 @@ services:
 
       KAFKA_LISTENERS: CONTROLLER://:9093,INTERNAL://:9092,EXTERNAL://:29092
 
-
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:9092,EXTERNAL://localhost:9092
-
 
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
@@ -30,12 +31,18 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2
 
+      KAFKA_JMX_OPTS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent.jar=9404:/opt/kafka/config/jmx-exporter.yml"
+
+
   kafka2:
     image: apache/kafka:3.7.0
     hostname: kafka2
     container_name: kafka2
     ports:
       - "9093:29092"
+    volumes:
+      - ./kafka-jmx-exporter.yml:/opt/kafka/config/jmx-exporter.yml
+      - ./jmx_prometheus_javaagent-1.5.0.jar:/usr/share/jmx_exporter/jmx_prometheus_javaagent.jar
     environment:
       PATH: =/opt/java/openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/kafka/bin
       KAFKA_NODE_ID: 2
@@ -52,12 +59,17 @@ services:
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
 
+      KAFKA_JMX_OPTS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent.jar=9404:/opt/kafka/config/jmx-exporter.yml"
+
   kafka3:
     image: apache/kafka:3.7.0
     hostname: kafka3
     container_name: kafka3
     ports:
       - "9094:29092"
+    volumes:
+      - ./kafka-jmx-exporter.yml:/opt/kafka/config/jmx-exporter.yml
+      - ./jmx_prometheus_javaagent-1.5.0.jar:/usr/share/jmx_exporter/jmx_prometheus_javaagent.jar
     environment:
       KAFKA_NODE_ID: 3
       KAFKA_CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
@@ -72,6 +84,9 @@ services:
 
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+      KAFKA_JMX_OPTS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent.jar=9404:/opt/kafka/config/jmx-exporter.yml"
+
 
   schema-registry:
     image: confluentinc/cp-schema-registry:7.6.0
@@ -139,3 +154,26 @@ services:
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - kafka1
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+  alert-manager:
+    image: prom/alert-manager:v0.26.0
+    ports:
+      - "19093:9093"
