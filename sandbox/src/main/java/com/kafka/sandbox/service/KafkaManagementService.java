@@ -1,7 +1,9 @@
 package com.kafka.sandbox.service;
 
 import com.kafka.sandbox.dto.ClusterHealth;
+import com.kafka.sandbox.dto.ConsumerGroupDto;
 import com.kafka.sandbox.dto.TopicDto;
+import com.kafka.sandbox.mapper.ConsumerGroupMapper;
 import com.kafka.sandbox.mapper.TopicMapper;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.Node;
@@ -29,7 +31,9 @@ public class KafkaManagementService {
     DescribeTopicsResult topicsResult;
 
     TopicMapper topicMapper;
-    public KafkaManagementService(AdminClient adminClient,TopicMapper topicMapper) throws ExecutionException, InterruptedException {
+    ConsumerGroupMapper consumerGroupMapper;
+
+    public KafkaManagementService(AdminClient adminClient, TopicMapper topicMapper, ConsumerGroupMapper consumerGroupMapper) throws ExecutionException, InterruptedException {
         this.adminClient = adminClient;
         this.topics = adminClient.listTopics();
         this.clusterResult = adminClient.describeCluster();
@@ -37,13 +41,13 @@ public class KafkaManagementService {
         this.nodes = clusterResult.nodes().get();
         this.topicsResult = adminClient.describeTopics(names);
         this.topicMapper = topicMapper;
+        this.consumerGroupMapper = consumerGroupMapper;
     }
 
     @PostConstruct
     public void initialCheck() throws ExecutionException, InterruptedException {
 
-        for (Node node : nodes
-        ) {
+        for (Node node : nodes) {
             System.out.println(node.id() + "; " + node.host() + "; " + node.port());
         }
         System.out.println("Size of the cluster: " + nodes.size());
@@ -69,13 +73,6 @@ public class KafkaManagementService {
             }
         });
 
-
-//        }
-//        for (TopicDescription td: topicsMap
-//             ) {
-//            TopicDescription td = topicsMap.get("test-topic");
-//        }
-
     }
 
     public ClusterHealth checkCluster() throws ExecutionException, InterruptedException {
@@ -93,7 +90,6 @@ public class KafkaManagementService {
     }
 
     public TopicDto checkTopic(String name) throws ExecutionException, InterruptedException {
-
         Map<String, TopicDescription> topicsMap = topicsResult.allTopicNames().get();
         return topicMapper.mapFromTopicDescription(topicsMap.get(name));
     }
@@ -101,5 +97,10 @@ public class KafkaManagementService {
     public List<TopicDto> checkTopics() throws ExecutionException, InterruptedException {
         Map<String, TopicDescription> topicsMap = topicsResult.allTopicNames().get();
         return topicMapper.mapFromTopicDescriptions(topicsMap);
+    }
+
+    public ConsumerGroupDto checkConsumerGroups(String groupId) throws ExecutionException, InterruptedException {
+        ListConsumerGroupOffsetsResult result = adminClient.listConsumerGroupOffsets(groupId);
+        return consumerGroupMapper.mapFromConsumerGroup(result, groupId);
     }
 }
