@@ -9,5 +9,5 @@ public class ConsumerGroupDto {
     int partition;
     long committedOffset;
     long endOffset;
-    long lag;
+    long lag = endOffset - committedOffset;
 }

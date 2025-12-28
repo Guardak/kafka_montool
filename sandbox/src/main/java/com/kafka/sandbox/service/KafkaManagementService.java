@@ -12,10 +12,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,27 +45,27 @@ public class KafkaManagementService {
     public void initialCheck() throws ExecutionException, InterruptedException {
 
         for (Node node : nodes) {
-            System.out.println(node.id() + "; " + node.host() + "; " + node.port());
+            //System.out.println(node.id() + "; " + node.host() + "; " + node.port());
         }
-        System.out.println("Size of the cluster: " + nodes.size());
+        //System.out.println("Size of the cluster: " + nodes.size());
         Node controller = clusterResult.controller().get();
         if (controller.isEmpty()) {
-            System.out.println("Cluster unhealthy");
+//            System.out.println("Cluster unhealthy");
         } else {
-            System.out.println("Controller is elected");
-            System.out.println("Controler id: " + controller.id());
+//            System.out.println("Controller is elected");
+//            System.out.println("Controler id: " + controller.id());
         }
         DescribeTopicsResult topicsResult = adminClient.describeTopics(names);
         Map<String, TopicDescription> topicsMap = topicsResult.allTopicNames().get();
 
         topicsMap.forEach((topicName, td) -> {
-            System.out.println(td.toString());
+//            System.out.println(td.toString());
             for (TopicPartitionInfo p : td.partitions()) {
-                System.out.println(p.toString());
+//                System.out.println(p.toString());
                 if (p.isr().size() < p.replicas().size()) {
-                    System.out.println("Problem with topic" + td.name());
+//                    System.out.println("Problem with topic" + td.name());
                 } else {
-                    System.out.println("Topic " + td.name() + " healthy!");
+//                    System.out.println("Topic " + td.name() + " healthy!");
                 }
             }
         });
@@ -99,8 +96,10 @@ public class KafkaManagementService {
         return topicMapper.mapFromTopicDescriptions(topicsMap);
     }
 
-    public ConsumerGroupDto checkConsumerGroups(String groupId) throws ExecutionException, InterruptedException {
+    public List<ConsumerGroupDto> checkConsumerGroups(String groupId) throws ExecutionException, InterruptedException {
         ListConsumerGroupOffsetsResult result = adminClient.listConsumerGroupOffsets(groupId);
+        //[(groupId='_confluent-controlcenter-7-6-0-1', isSimpleConsumerGroup=false, groupState=Optional[Stable], type=Optional.empty),
+        // (groupId='_confluent-controlcenter-7-6-0-1-command', isSimpleConsumerGroup=false, groupState=Optional[Stable], type=Optional.empty)]
         return consumerGroupMapper.mapFromConsumerGroup(result, groupId);
     }
 }

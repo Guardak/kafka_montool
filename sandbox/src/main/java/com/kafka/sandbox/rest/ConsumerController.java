@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 @RestController
 public class ConsumerController {
@@ -16,7 +17,7 @@ public class ConsumerController {
     }
 
     @GetMapping("/lag/{groupId}")
-    public ConsumerGroupDto clusterHealth(@PathVariable String groupId) throws ExecutionException, InterruptedException {
+    public List<ConsumerGroupDto> clusterHealth(@PathVariable String groupId) throws ExecutionException, InterruptedException {
         return adminService.checkConsumerGroups(groupId);
     }
 }
