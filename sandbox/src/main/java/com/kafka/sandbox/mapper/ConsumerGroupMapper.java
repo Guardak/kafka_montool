@@ -32,8 +32,11 @@ public class ConsumerGroupMapper {
             OffsetAndMetadata oam = entry.getValue();
             consDto.setTopic(tp.topic());
             consDto.setPartition(tp.partition());
-            consDto.setCommittedOffset(oam.offset());
-            consDto.setEndOffset(consumerService.getEndOffset(tp));
+            long commitedOffset = oam.offset();
+            long endOffset = consumerService.getEndOffset(tp);
+            consDto.setCommittedOffset(commitedOffset);
+            consDto.setEndOffset(endOffset);
+            consDto.setLag(endOffset - commitedOffset);
             consumerGroupDtoList.add(consDto);
         }
         return consumerGroupDtoList;
