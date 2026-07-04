@@ -161,6 +161,8 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./broker-alerts.yml:/etc/prometheus/rules/broker-alerts.yml
+      - ./alert.rules:/etc/prometheus/rules/alert.rules
     depends_on:
       - kafka1
 
@@ -175,5 +177,8 @@ services:
       - prometheus
   alert-manager:
     image: prom/alertmanager:v0.26.0
+    container_name: alertmanager
     ports:
       - "19093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml

@@ -26,14 +26,14 @@ public class KafkaLagMetricsPublisher {
         this.meterRegistry = meterRegistry;
         this.adminService = adminService;
     }
-    private void registerLagGauge(String groupId, String topic, int partition) {
-        String key = topic + "-" + partition;
+    private void registerLagGauge() {
+        String key = "test-topic" + "-" + 1;
         lagStorage.putIfAbsent(key, new AtomicLong(0));
 
         Gauge.builder("kafka_consumer_group_lag", lagStorage.get(key), AtomicLong::get)
-                .tag("group", groupId)
-                .tag("topic", topic)
-                .tag("partition", String.valueOf(partition))
+                .tag("group", "lag-monitor")
+                .tag("topic", "test-topic")
+                .tag("partition", String.valueOf(1))
                 .description("Current lag for Kafka consumer group")
                 .register(meterRegistry);
     }
@@ -43,7 +43,7 @@ public class KafkaLagMetricsPublisher {
 
         long currentLag = adminService.checkConsumerGroups("test-group").get(1).getLag();
 
-        registerLagGauge("lag-monitor", "test-topic", 1);
+        registerLagGauge();
 
         lagStorage.get("orders-0").set(currentLag);
     }

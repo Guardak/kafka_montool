@@ -19,7 +19,7 @@ public class TopicsController {
     public TopicsController(KafkaManagementService adminService) {
         this.adminService = adminService;
     }
-    @GetMapping("/")
+    @GetMapping()
     public List<TopicDto> checkTopics() throws ExecutionException, InterruptedException {
         return adminService.checkTopics();
     }
